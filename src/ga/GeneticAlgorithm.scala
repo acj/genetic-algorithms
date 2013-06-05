@@ -46,7 +46,7 @@ class GeneticAlgorithm(pop: Population, fitnessFunction: FitnessFunction, target
           if (gen == MAX_GENERATIONS) {
             mutatedPop
           } else if (hasOptimalChromosome(mutatedPop)) {
-            println("Found optimal solution")
+            println("Found optimal solution in generation #" + gen)
             println((mutatedPop zip evaluate(mutatedPop)) sortBy(_._2) reverse)
             mutatedPop
           } else evolveAcc(mutatedPop, gen + 1)
