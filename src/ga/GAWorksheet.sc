@@ -7,7 +7,7 @@ object GAWorksheet {
 
 	var targetFitness = targetString.length
 	
-	var popSize = 10
+	var popSize = 100
 	var chromosomeSize = targetString.length
   var pop = Seq.fill(popSize)(Chromosome.generateChromosome(chromosomeSize)).toList
 
