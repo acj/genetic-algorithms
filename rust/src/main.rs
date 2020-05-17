@@ -53,12 +53,11 @@ impl GeneticAlgorithm {
             i.mutate(mutation_probability);
         }
         for _ in 0..random_individuals_needed {
-            // TODO: Avoid expensive copy of population
-            new_population.push(GeneticAlgorithm::random_individual(self.population.to_owned()));
+            new_population.push(GeneticAlgorithm::random_individual(&self.population));
         }
         for _ in 0..crossover_individuals_needed {
-            let first_individual = GeneticAlgorithm::random_individual(self.population.to_owned());
-            let second_individual = GeneticAlgorithm::random_individual(self.population.to_owned());
+            let first_individual = GeneticAlgorithm::random_individual(&self.population);
+            let second_individual = GeneticAlgorithm::random_individual(&self.population);
             let crossed_individual = first_individual.crossover(second_individual);
             new_population.push(crossed_individual);
         }
@@ -88,7 +87,7 @@ impl GeneticAlgorithm {
         }
     }
 
-    fn random_individual(population: Vec<Individual>) -> Individual {
+    fn random_individual(population: &Vec<Individual>) -> Individual {
         let mut rng = rand::thread_rng();
         let idx = rng.gen_range(0, population.len());
         return population[idx].clone();
