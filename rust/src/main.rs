@@ -20,7 +20,7 @@ impl GeneticAlgorithm {
         self.population = individuals;
     }
 
-    fn evaluate(&mut self, ideal_genotype: String) {
+    fn evaluate(&mut self, ideal_genotype: &String) {
         // TODO: parallelize
         for individual in &mut self.population {
             let mut matches: i64 = 0;
@@ -145,7 +145,7 @@ fn main() {
     };
     ga.seed(population_size, ideal_genotype.len());
     for i in 0..generations {
-        ga.evaluate(ideal_genotype.clone());
+        ga.evaluate(&ideal_genotype);
         ga.next(mutation_prob);
         let best = ga.best_individual();
         println!("[{}]: \"{}\", fitness {}", i, best.genotype, best.fitness);
@@ -177,7 +177,7 @@ mod tests {
                 Individual{genotype: terrible_genotype.to_owned(), fitness: 0.0}
             ]
         };
-        ga.evaluate(optimal_genotype);
+        ga.evaluate(&optimal_genotype);
 
         assert_eq!(ga.population[0].fitness, 1.0);
         assert_eq!(ga.population[1].fitness, 0.0);
@@ -193,7 +193,7 @@ mod tests {
                 Individual{genotype: terrible_genotype.to_owned(), fitness: 0.0}
             ]
         };
-        ga.evaluate(optimal_genotype.to_owned());
+        ga.evaluate(&optimal_genotype);
 
         let selected = ga.select(1);
         assert_eq!(selected.len(), 1);
