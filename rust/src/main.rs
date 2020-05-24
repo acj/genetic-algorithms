@@ -157,7 +157,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_individual_crossover_with_pivot() {
+    fn crossover_with_pivot() {
         let i1 = Individual{genotype: "abcd".to_owned(), fitness: 0.0};
         let i2 = Individual{genotype: "efgh".to_owned(), fitness: 0.0};
         let crossed_individual = i1.crossover_with_pivot(i2, 1);
@@ -165,7 +165,7 @@ mod tests {
     }
 
     #[test]
-    fn test_individual_fitness() {
+    fn evaluate() {
         let optimal_genotype = String::from("abcd");
         let terrible_genotype = String::from("1234");
         let mut population = vec![
@@ -179,7 +179,7 @@ mod tests {
     }
 
     #[test]
-    fn test_ga_select() {
+    fn select() {
         let optimal_genotype = String::from("abcd");
         let terrible_genotype = String::from("1234");
         let mut population = vec![
