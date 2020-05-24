@@ -39,7 +39,7 @@ impl GeneticAlgorithm {
 
     fn select(population: &Vec<Individual>, top: usize) -> Vec<Individual> {
         let mut members = population.to_vec();
-        members.sort_by(|individual1, individual2| individual1.fitness.partial_cmp(&individual2.fitness).unwrap());
+        members.sort_unstable_by(|individual1, individual2| individual1.fitness.partial_cmp(&individual2.fitness).unwrap());
         return members.iter().rev().take(top).cloned().collect();
     }
 
