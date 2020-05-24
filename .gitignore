@@ -1,0 +1,9 @@
+**/target
+**/*.rs.bk
+**/.cache
+**/.classpath
+**/.project
+**/.worksheet
+**/bin
+**/lib_managed
+*~
