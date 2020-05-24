@@ -137,7 +137,7 @@ impl Individual {
 
 fn main() {
     let ideal_genotype = String::from("The quick brown fox jumped over the lazy dog");
-    let population_size = 2000;
+    let population_size = 10000;
     let generations = 100;
     let mutation_prob = 1.0 / ideal_genotype.len() as f64;
     let mut pop = GeneticAlgorithm::seed(population_size, ideal_genotype.len());
