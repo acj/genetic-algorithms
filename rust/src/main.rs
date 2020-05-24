@@ -1,5 +1,6 @@
 extern crate rand;
 
+use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -104,20 +105,21 @@ struct Individual {
 impl Individual {
     fn mutate(&self, per_site_mut_rate: f64) -> String {
         let mut rng = rand::thread_rng();
-        let mutated_genotype: String = 
-            (0..self.genotype.len())
-            .map(|i| {
-                let probability = rng.gen_range(0.0, 1.0);
-                if probability <= per_site_mut_rate {
-                    let idx = rng.gen_range(0, CHARSET.len());
-                    CHARSET[idx] as char
-                } else {
-                    self.genotype.as_bytes()[i] as char
-                }
-            })
-            .collect();
+        let mut genotype = vec![0; self.genotype.len()];
+        let genotype_bytes = self.genotype.as_bytes();
+        let charset_between = Uniform::from(0..CHARSET.len());
+        let probability_between = Uniform::from(0.0..1.0);
 
-        mutated_genotype
+        for i in 0..self.genotype.len() {
+            genotype[i] =
+                if probability_between.sample(&mut rng) <= per_site_mut_rate {
+                    CHARSET[charset_between.sample(&mut rng)]
+                } else {
+                    genotype_bytes[i]
+                };
+        }
+
+        String::from_utf8(genotype).unwrap()
     }
 
     fn crossover_with_pivot(&self, other: Individual, pivot: usize) -> Individual {
