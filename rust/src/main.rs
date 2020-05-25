@@ -63,13 +63,16 @@ impl GeneticAlgorithm {
     }
 
     fn best_individual(population: &Vec<Individual>) -> Individual {
-        let mut best = population.first().unwrap().to_owned();
-        for individual in population {
-            if individual.fitness > best.fitness {
-                best = individual.to_owned();
-            }
-        }
-        return best;
+        population
+            .iter()
+            .max_by(|individual1, individual2| {
+                individual1
+                    .fitness
+                    .partial_cmp(&individual2.fitness)
+                    .unwrap()
+            })
+            .unwrap()
+            .clone()
     }
 
     fn generate_individual(genotype_size: usize) -> Individual {
