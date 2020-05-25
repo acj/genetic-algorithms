@@ -87,7 +87,7 @@ impl GeneticAlgorithm {
             .collect();
 
         Individual {
-            genotype: genotype,
+            genotype,
             fitness: -1.0,
         }
     }
