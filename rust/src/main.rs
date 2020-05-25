@@ -10,13 +10,9 @@ struct GeneticAlgorithm;
 
 impl GeneticAlgorithm {
     fn seed(population_size: usize, genotype_size: usize) -> Vec<Individual> {
-        let mut individuals: Vec<Individual> = vec![];
-
-        for _ in 0..population_size {
-            individuals.push(GeneticAlgorithm::generate_individual(genotype_size));
-        }
-
-        return individuals;
+        (0..population_size)
+            .map(|_| GeneticAlgorithm::generate_individual(genotype_size))
+            .collect()
     }
 
     fn evaluate(population: &mut Vec<Individual>, ideal_genotype: &String) {
