@@ -11,7 +11,7 @@ struct GeneticAlgorithm;
 impl GeneticAlgorithm {
     fn seed(population_size: usize, genotype_size: usize) -> Vec<Individual> {
         let mut individuals: Vec<Individual> = vec![];
-    
+
         for _ in 0..population_size {
             individuals.push(GeneticAlgorithm::generate_individual(genotype_size));
         }
@@ -40,14 +40,20 @@ impl GeneticAlgorithm {
 
     fn select(population: &Vec<Individual>, top: usize) -> Vec<Individual> {
         let mut members = population.to_vec();
-        members.sort_unstable_by(|individual1, individual2| individual1.fitness.partial_cmp(&individual2.fitness).unwrap());
+        members.sort_unstable_by(|individual1, individual2| {
+            individual1
+                .fitness
+                .partial_cmp(&individual2.fitness)
+                .unwrap()
+        });
         return members.iter().rev().take(top).cloned().collect();
     }
 
     fn next(population: Vec<Individual>, mutation_probability: f64) -> Vec<Individual> {
         let mut new_population = GeneticAlgorithm::select(&population, population.len() / 4);
         let random_individuals_needed = population.len() / 4;
-        let crossover_individuals_needed = population.len() - new_population.len() - random_individuals_needed;
+        let crossover_individuals_needed =
+            population.len() - new_population.len() - random_individuals_needed;
         for i in &new_population {
             i.mutate(mutation_probability);
         }
@@ -75,17 +81,17 @@ impl GeneticAlgorithm {
 
     fn generate_individual(genotype_size: usize) -> Individual {
         let mut rng = rand::thread_rng();
-    
+
         let genotype: String = (0..genotype_size)
             .map(|_| {
                 let idx = rng.gen_range(0, CHARSET.len());
                 CHARSET[idx] as char
             })
             .collect();
-        
-        Individual{
+
+        Individual {
             genotype: genotype,
-            fitness: -1.0
+            fitness: -1.0,
         }
     }
 
@@ -99,7 +105,7 @@ impl GeneticAlgorithm {
 #[derive(Debug, Clone)]
 struct Individual {
     genotype: String,
-    fitness: f64
+    fitness: f64,
 }
 
 impl Individual {
@@ -111,12 +117,11 @@ impl Individual {
         let probability_between = Uniform::from(0.0..1.0);
 
         for i in 0..self.genotype.len() {
-            genotype[i] =
-                if probability_between.sample(&mut rng) <= per_site_mut_rate {
-                    CHARSET[charset_between.sample(&mut rng)]
-                } else {
-                    genotype_bytes[i]
-                };
+            genotype[i] = if probability_between.sample(&mut rng) <= per_site_mut_rate {
+                CHARSET[charset_between.sample(&mut rng)]
+            } else {
+                genotype_bytes[i]
+            };
         }
 
         String::from_utf8(genotype).unwrap()
@@ -125,8 +130,11 @@ impl Individual {
     fn crossover_with_pivot(&self, other: Individual, pivot: usize) -> Individual {
         let first_half = self.genotype[0..pivot].to_owned();
         let second_half = &other.genotype[pivot..];
-        
-        return Individual{genotype: first_half + second_half, fitness: 0.0};
+
+        return Individual {
+            genotype: first_half + second_half,
+            fitness: 0.0,
+        };
     }
 
     fn crossover(&self, other: Individual) -> Individual {
@@ -160,8 +168,14 @@ mod tests {
 
     #[test]
     fn crossover_with_pivot() {
-        let i1 = Individual{genotype: "abcd".to_owned(), fitness: 0.0};
-        let i2 = Individual{genotype: "efgh".to_owned(), fitness: 0.0};
+        let i1 = Individual {
+            genotype: "abcd".to_owned(),
+            fitness: 0.0,
+        };
+        let i2 = Individual {
+            genotype: "efgh".to_owned(),
+            fitness: 0.0,
+        };
         let crossed_individual = i1.crossover_with_pivot(i2, 1);
         assert_eq!(crossed_individual.genotype, "afgh");
     }
@@ -171,8 +185,14 @@ mod tests {
         let optimal_genotype = String::from("abcd");
         let terrible_genotype = String::from("1234");
         let mut population = vec![
-            Individual{genotype: optimal_genotype.to_owned(), fitness: 0.0},
-            Individual{genotype: terrible_genotype.to_owned(), fitness: 0.0}
+            Individual {
+                genotype: optimal_genotype.to_owned(),
+                fitness: 0.0,
+            },
+            Individual {
+                genotype: terrible_genotype.to_owned(),
+                fitness: 0.0,
+            },
         ];
         GeneticAlgorithm::evaluate(&mut population, &optimal_genotype);
 
@@ -185,8 +205,14 @@ mod tests {
         let optimal_genotype = String::from("abcd");
         let terrible_genotype = String::from("1234");
         let mut population = vec![
-            Individual{genotype: optimal_genotype.to_owned(), fitness: 0.0},
-            Individual{genotype: terrible_genotype.to_owned(), fitness: 0.0}
+            Individual {
+                genotype: optimal_genotype.to_owned(),
+                fitness: 0.0,
+            },
+            Individual {
+                genotype: terrible_genotype.to_owned(),
+                fitness: 0.0,
+            },
         ];
         GeneticAlgorithm::evaluate(&mut population, &optimal_genotype);
 
