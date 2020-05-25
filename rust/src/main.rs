@@ -22,19 +22,16 @@ impl GeneticAlgorithm {
     fn evaluate(population: &mut Vec<Individual>, ideal_genotype: &String) {
         // TODO: parallelize
         for individual in population {
-            let mut matches: i64 = 0;
-
             // Assumption: only ascii characters in the genotype
-            let optimal_genes = ideal_genotype.as_bytes();
-            let self_genes = individual.genotype.as_bytes();
+            let optimal_genes = ideal_genotype.chars();
+            let num_matches = individual
+                .genotype
+                .chars()
+                .zip(optimal_genes)
+                .filter(|(my_gene, optimal_gene)| my_gene == optimal_gene)
+                .count();
 
-            for i in 0..individual.genotype.len() {
-                if self_genes[i] == optimal_genes[i] {
-                    matches += 1;
-                }
-            }
-
-            individual.fitness = matches as f64 / (optimal_genes.len() as f64);
+            individual.fitness = num_matches as f64 / (ideal_genotype.len() as f64);
         }
     }
 
