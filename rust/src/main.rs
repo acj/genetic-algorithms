@@ -1,5 +1,7 @@
 extern crate rand;
 
+use rayon::prelude::*;
+
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
 
@@ -16,19 +18,18 @@ impl GeneticAlgorithm {
     }
 
     fn evaluate(population: &mut Vec<Individual>, ideal_genotype: &String) {
-        // TODO: parallelize
-        for individual in population {
+        population.into_par_iter().for_each(|individual| {
             // Assumption: only ascii characters in the genotype
             let optimal_genes = ideal_genotype.chars();
-            let num_matches = individual
-                .genotype
-                .chars()
+            let my_genes = individual.genotype.chars();
+
+            let num_matches = my_genes
                 .zip(optimal_genes)
                 .filter(|(my_gene, optimal_gene)| my_gene == optimal_gene)
                 .count();
 
             individual.fitness = num_matches as f64 / (ideal_genotype.len() as f64);
-        }
+        });
     }
 
     fn select(population: &Vec<Individual>, top: usize) -> Vec<Individual> {
