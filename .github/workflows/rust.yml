@@ -20,6 +20,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Build
-      run: cd rust && cargo build --verbose
+      run: cd rust && cargo build
     - name: Run tests
-      run: cd rust && cargo test --verbose
+      run: cd rust && cargo test
