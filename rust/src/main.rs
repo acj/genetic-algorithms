@@ -7,6 +7,8 @@ use rand::Rng;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz ";
+const NOT_YET_EVALUATED: f64 = -1.0;
+const ALLOWED_FITNESS_ERROR: f64 = 0.001;
 
 pub trait Individual: Clone + Sync + Send {
     fn evaluate(&mut self);
@@ -21,20 +23,18 @@ pub trait Individual: Clone + Sync + Send {
 }
 
 struct GeneticAlgorithm<T> {
-    population: Vec<T>
+    population: Vec<T>,
 }
 
 impl<T: Individual> GeneticAlgorithm<T> {
     fn new(population_size: usize) -> GeneticAlgorithm<T> {
-        return GeneticAlgorithm{
-            population: Self::seed(population_size)
+        GeneticAlgorithm {
+            population: Self::seed(population_size),
         }
     }
 
     fn seed(population_size: usize) -> Vec<T> {
-        (0..population_size)
-            .map(|_| T::generate())
-            .collect()
+        (0..population_size).map(|_| T::generate()).collect()
     }
 
     fn evaluate(&mut self) {
@@ -43,7 +43,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
         });
     }
 
-    fn select(population: &Vec<T>, top: usize) -> Vec<T> {
+    fn select(population: &[T], top: usize) -> Vec<T> {
         let mut members = population.to_vec();
         members.sort_unstable_by(|individual1, individual2| {
             individual1
@@ -51,11 +51,12 @@ impl<T: Individual> GeneticAlgorithm<T> {
                 .partial_cmp(&individual2.fitness())
                 .unwrap()
         });
-        return members.iter().rev().take(top).cloned().collect();
+        members.iter().rev().take(top).cloned().collect()
     }
 
     fn evolve(&mut self) {
-        let mut new_population = GeneticAlgorithm::select(&self.population, self.population.len() / 4);
+        let mut new_population =
+            GeneticAlgorithm::select(&self.population, self.population.len() / 4);
         let random_individuals_needed = self.population.len() / 4;
         let crossover_individuals_needed =
             self.population.len() - new_population.len() - random_individuals_needed;
@@ -87,31 +88,31 @@ impl<T: Individual> GeneticAlgorithm<T> {
             .clone()
     }
 
-    fn random_individual(population: &Vec<T>) -> T {
+    fn random_individual(population: &[T]) -> T {
         let mut rng = rand::thread_rng();
         let idx = rng.gen_range(0, population.len());
-        return population[idx].clone();
+        population[idx].clone()
     }
 }
 
 #[derive(Debug, Clone)]
 struct Sentence {
     genotype: String,
-    fitness: f64
+    fitness: f64,
 }
 
 impl Sentence {
     fn new(genotype: String) -> Self {
         Self {
-            genotype: genotype,
-            fitness: -1.0
+            genotype,
+            fitness: NOT_YET_EVALUATED,
         }
     }
 
     fn ideal() -> Self {
         Self {
             genotype: String::from("The quick brown fox jumped over the lazy dog"),
-            fitness: 1.0
+            fitness: 1.0,
         }
     }
 
@@ -119,16 +120,13 @@ impl Sentence {
         let first_half = self.genotype[0..pivot].to_owned();
         let second_half = &other.genotype[pivot..];
 
-        return Self {
-            genotype: first_half + second_half,
-            fitness: -1.0,
-        };
+        Self::new(first_half + second_half)
     }
 }
 
 impl Individual for Sentence {
     fn evaluate(&mut self) {
-        if self.fitness == -1.0 {
+        if (self.fitness - NOT_YET_EVALUATED).abs() < ALLOWED_FITNESS_ERROR {
             // Assumption: only ascii characters in the genotype
             let ideal_sentence = Sentence::ideal();
             let optimal_genes = ideal_sentence.genotype.chars();
@@ -167,7 +165,7 @@ impl Individual for Sentence {
         let mut rng = rand::thread_rng();
         let pivot = rng.gen_range(0, self.genotype.len());
 
-        return self.crossover_with_pivot(other, pivot);
+        self.crossover_with_pivot(other, pivot)
     }
 
     fn generate() -> Sentence {
@@ -193,14 +191,15 @@ fn main() {
     let generations = 1000;
     let population_size = 10000;
 
-    let mut ga= GeneticAlgorithm::<Sentence>::new(population_size);
+    let mut ga = GeneticAlgorithm::<Sentence>::new(population_size);
 
     for i in 0..generations {
         ga.evaluate();
         ga.evolve();
+
         let best = ga.best_individual();
         println!("[{}]: \"{}\", fitness {}", i, best.genotype, best.fitness);
-        if best.fitness == 1.0 {
+        if (best.fitness - 1.0).abs() < ALLOWED_FITNESS_ERROR {
             std::process::exit(0);
         }
     }
@@ -236,11 +235,9 @@ mod tests {
         let terrible_genotype = String::from("1234");
         let population = vec![
             Sentence::new(optimal_genotype.to_owned()),
-            Sentence::new(terrible_genotype.to_owned())
+            Sentence::new(terrible_genotype.to_owned()),
         ];
-        let mut ga = GeneticAlgorithm{
-            population: population
-        };
+        let mut ga = GeneticAlgorithm { population };
         ga.evaluate();
 
         let selected = GeneticAlgorithm::select(&ga.population, 1);
