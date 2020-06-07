@@ -1,16 +1,16 @@
 extern crate rand;
 
 use rayon::prelude::*;
-
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
+use std::fmt;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz ";
 const NOT_YET_EVALUATED: f64 = -1.0;
 const ALLOWED_FITNESS_ERROR: f64 = 0.001;
 
-pub trait Individual: Clone + Sync + Send {
+pub trait Individual: Clone + Sync + Send  + fmt::Display {
     fn evaluate(&mut self);
 
     fn mutate(&self) -> Self;
@@ -124,6 +124,12 @@ impl Sentence {
     }
 }
 
+impl fmt::Display for Sentence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "\"{}\", fitness {}", self.genotype, self.fitness)
+    }
+}
+
 impl Individual for Sentence {
     fn evaluate(&mut self) {
         if (self.fitness - NOT_YET_EVALUATED).abs() < ALLOWED_FITNESS_ERROR {
@@ -198,7 +204,8 @@ fn main() {
         ga.evolve();
 
         let best = ga.best_individual();
-        println!("[{}]: \"{}\", fitness {}", i, best.genotype, best.fitness);
+
+        println!("[{}]: {}", i, best);
         if (best.fitness - 1.0).abs() < ALLOWED_FITNESS_ERROR {
             std::process::exit(0);
         }
