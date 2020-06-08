@@ -46,12 +46,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
 
     fn select(population: &[T], top: usize) -> Vec<T> {
         let mut members = population.to_vec();
-        members.sort_unstable_by(|individual1, individual2| {
-            individual1
-                .fitness()
-                .partial_cmp(&individual2.fitness())
-                .unwrap()
-        });
+        members.sort();
         members.iter().rev().take(top).cloned().collect()
     }
 
@@ -79,12 +74,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
     fn best_individual(&self) -> T {
         self.population
             .iter()
-            .max_by(|individual1, individual2| {
-                individual1
-                    .fitness()
-                    .partial_cmp(&individual2.fitness())
-                    .unwrap()
-            })
+            .max()
             .unwrap()
             .clone()
     }
