@@ -3,6 +3,7 @@ extern crate rand;
 use rayon::prelude::*;
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
+use std::cmp::Ordering;
 use std::fmt;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
@@ -10,7 +11,7 @@ const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
 const NOT_YET_EVALUATED: f64 = -1.0;
 const ALLOWED_FITNESS_ERROR: f64 = 0.001;
 
-pub trait Individual: Clone + Sync + Send  + fmt::Display {
+pub trait Individual: Clone + Sync + Send + fmt::Display + Ord {
     fn evaluate(&mut self);
 
     fn mutate(&self) -> Self;
@@ -123,6 +124,26 @@ impl Sentence {
         Self::new(first_half + second_half)
     }
 }
+
+impl PartialOrd for Sentence {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Sentence {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Assumption: we never use NaN as a fitness value
+        self.fitness.partial_cmp(&other.fitness).unwrap()
+    }
+}
+
+impl PartialEq for Sentence {
+    fn eq(&self, other: &Self) -> bool {
+        self.genotype == other.genotype
+    }
+}
+impl Eq for Sentence {}
 
 impl fmt::Display for Sentence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
