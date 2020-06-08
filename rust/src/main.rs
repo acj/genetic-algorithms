@@ -1,8 +1,8 @@
 extern crate rand;
 
-use rayon::prelude::*;
 use rand::distributions::{Distribution, Uniform};
 use rand::Rng;
+use rayon::prelude::*;
 use std::cmp::Ordering;
 use std::fmt;
 
@@ -72,11 +72,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
     }
 
     fn best_individual(&self) -> T {
-        self.population
-            .iter()
-            .max()
-            .unwrap()
-            .clone()
+        self.population.iter().max().unwrap().clone()
     }
 
     fn random_individual(population: &[T]) -> T {
