@@ -7,26 +7,25 @@ use std::fmt;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
                             abcdefghijklmnopqrstuvwxyz ";
-const NOT_YET_EVALUATED: f64 = -1.0;
 
 #[derive(Debug, Clone)]
 pub struct Sentence {
     pub genotype: String,
-    fitness: f64,
+    fitness: Option<f64>,
 }
 
 impl Sentence {
     pub fn new(genotype: String) -> Self {
         Self {
             genotype,
-            fitness: NOT_YET_EVALUATED,
+            fitness: None,
         }
     }
 
     pub fn ideal() -> Self {
         Self {
             genotype: String::from("The quick brown fox jumped over the lazy dog"),
-            fitness: 1.0,
+            fitness: Some(1.0),
         }
     }
 
@@ -40,7 +39,7 @@ impl Sentence {
 
 impl Individual for Sentence {
     fn evaluate(&mut self) {
-        if (self.fitness - NOT_YET_EVALUATED).abs() < crate::ALLOWED_FITNESS_ERROR {
+        if self.fitness == None {
             // Assumption: only ascii characters in the genotype
             let ideal_sentence = Sentence::ideal();
             let optimal_genes = ideal_sentence.genotype.chars();
@@ -51,7 +50,7 @@ impl Individual for Sentence {
                 .filter(|(my_gene, optimal_gene)| my_gene == optimal_gene)
                 .count();
 
-            self.fitness = num_matches as f64 / (ideal_sentence.genotype.len() as f64);
+            self.fitness = Some(num_matches as f64 / (ideal_sentence.genotype.len() as f64));
         }
     }
 
@@ -96,14 +95,18 @@ impl Individual for Sentence {
         Sentence::new(genotype)
     }
 
-    fn fitness(&self) -> f64 {
+    fn fitness(&self) -> Option<f64> {
         self.fitness
     }
 }
 
 impl PartialOrd for Sentence {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+        if let (Some(my_fitness), Some(their_fitness)) = (self.fitness(), other.fitness()) {
+            return my_fitness.partial_cmp(&their_fitness);
+        }
+
+        return None;
     }
 }
 
@@ -123,7 +126,11 @@ impl Eq for Sentence {}
 
 impl fmt::Display for Sentence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\"{}\", fitness {}", self.genotype, self.fitness)
+        if let Some(fitness) = self.fitness {
+            write!(f, "\"{}\", fitness {}", self.genotype, fitness)
+        } else {
+            write!(f, "\"{}\", fitness not yet evaluated", self.genotype)
+        }
     }
 }
 
@@ -147,7 +154,7 @@ mod tests {
         excellent.evaluate();
         terrible.evaluate();
 
-        assert_eq!(excellent.fitness, 1.0);
-        assert_eq!(terrible.fitness, 0.0);
+        assert_eq!(excellent.fitness.unwrap(), 1.0);
+        assert_eq!(terrible.fitness.unwrap(), 0.0);
     }
 }

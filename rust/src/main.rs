@@ -15,8 +15,10 @@ fn main() {
         let best = ga.best_individual();
 
         println!("[{}]: {}", i, best);
-        if (best.fitness() - 1.0).abs() < ga::ALLOWED_FITNESS_ERROR {
-            std::process::exit(0);
+        if let Some(fitness) = best.fitness() {
+            if (fitness - 1.0).abs() < ga::ALLOWED_FITNESS_ERROR {
+                std::process::exit(0);
+            }
         }
     }
 }

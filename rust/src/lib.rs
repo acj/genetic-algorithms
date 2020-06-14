@@ -19,7 +19,7 @@ pub trait Individual: Clone + Sync + Send + fmt::Display + Ord {
 
     fn generate() -> Self;
 
-    fn fitness(&self) -> f64;
+    fn fitness(&self) -> Option<f64>;
 }
 
 pub struct GeneticAlgorithm<T> {
