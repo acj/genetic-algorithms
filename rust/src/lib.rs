@@ -4,7 +4,6 @@ mod sentence;
 
 pub use crate::sentence::Sentence;
 
-use rand::rngs::StdRng;
 use rand::Rng;
 use rayon::prelude::*;
 use std::fmt;
@@ -14,22 +13,22 @@ pub const ALLOWED_FITNESS_ERROR: f64 = 0.001;
 pub trait Individual: Clone + Sync + Send + fmt::Display + Ord {
     fn evaluate(&mut self);
 
-    fn mutate(&self, rng: &mut StdRng) -> Self;
+    fn mutate<R: Rng>(&self, rng: &mut R) -> Self;
 
-    fn crossover(&self, other: Self, rng: &mut StdRng) -> Self;
+    fn crossover<R: Rng>(&self, other: Self, rng: &mut R) -> Self;
 
-    fn generate(rng: &mut StdRng) -> Self;
+    fn generate<R: Rng>(rng: &mut R) -> Self;
 
     fn fitness(&self) -> Option<f64>;
 }
 
-pub struct GeneticAlgorithm<T> {
+pub struct GeneticAlgorithm<R: Rng, T> {
     population: Vec<T>,
-    rng: StdRng,
+    rng: R,
 }
 
-impl<T: Individual> GeneticAlgorithm<T> {
-    pub fn new(population_size: usize, rng: StdRng) -> GeneticAlgorithm<T> {
+impl<R: Rng, T: Individual> GeneticAlgorithm<R, T> {
+    pub fn new(population_size: usize, rng: R) -> GeneticAlgorithm<R, T> {
         let mut rng = rng;
         GeneticAlgorithm {
             population: Self::seed(population_size, &mut rng),
@@ -37,7 +36,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
         }
     }
 
-    pub fn seed(population_size: usize, rng: &mut StdRng) -> Vec<T> {
+    pub fn seed(population_size: usize, rng: &mut R) -> Vec<T> {
         (0..population_size).map(|_| T::generate(rng)).collect()
     }
 
@@ -47,15 +46,14 @@ impl<T: Individual> GeneticAlgorithm<T> {
         });
     }
 
-    pub fn select(population: &[T], top: usize) -> Vec<T> {
-        let mut members = population.to_vec();
+    pub fn select(&self, top: usize) -> Vec<T> {
+        let mut members = self.population.to_vec();
         members.sort();
         members.iter().rev().take(top).cloned().collect()
     }
 
     pub fn evolve(&mut self) {
-        let mut new_population =
-            GeneticAlgorithm::select(&self.population, self.population.len() / 4);
+        let mut new_population = self.select(self.population.len() / 4);
         let random_individuals_needed = self.population.len() / 4;
         let crossover_individuals_needed =
             self.population.len() - new_population.len() - random_individuals_needed;
@@ -83,7 +81,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
         self.population.iter().max().unwrap().clone()
     }
 
-    pub fn random_individual(population: &[T], rng: &mut rand::rngs::StdRng) -> T {
+    pub fn random_individual(population: &[T], rng: &mut R) -> T {
         let idx = rng.gen_range(0, population.len());
         population[idx].clone()
     }
@@ -107,7 +105,7 @@ mod tests {
         let mut ga = GeneticAlgorithm { population, rng };
         ga.evaluate();
 
-        let selected = GeneticAlgorithm::select(&ga.population, 1);
+        let selected = ga.select(1);
         assert_eq!(selected.len(), 1);
         assert_eq!(selected[0].genotype, optimal_genotype);
     }

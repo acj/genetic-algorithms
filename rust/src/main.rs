@@ -26,7 +26,7 @@ fn main() {
 
     println!("Seed value: {}", seed);
     let rng = StdRng::seed_from_u64(seed);
-    let mut ga = GeneticAlgorithm::<Sentence>::new(population_size, rng);
+    let mut ga = GeneticAlgorithm::<_, Sentence>::new(population_size, rng);
 
     for i in 0..generations {
         ga.evaluate();

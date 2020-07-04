@@ -1,7 +1,6 @@
 use crate::Individual;
 
 use rand::distributions::{Distribution, Uniform};
-use rand::rngs::StdRng;
 use rand::Rng;
 use std::cmp::Ordering;
 use std::fmt;
@@ -55,7 +54,7 @@ impl Individual for Sentence {
         }
     }
 
-    fn mutate(&self, rng: &mut StdRng) -> Sentence {
+    fn mutate<R: Rng>(&self, rng: &mut R) -> Sentence {
         let per_site_mut_rate = 1.0 / Sentence::ideal().genotype.len() as f64;
         let mut genotype = vec![0; self.genotype.len()];
         let genotype_bytes = self.genotype.as_bytes();
@@ -73,13 +72,13 @@ impl Individual for Sentence {
         Sentence::new(String::from_utf8(genotype).unwrap())
     }
 
-    fn crossover(&self, other: Sentence, rng: &mut StdRng) -> Sentence {
+    fn crossover<R: Rng>(&self, other: Sentence, rng: &mut R) -> Sentence {
         let pivot = rng.gen_range(0, self.genotype.len());
 
         self.crossover_with_pivot(other, pivot)
     }
 
-    fn generate(rng: &mut StdRng) -> Sentence {
+    fn generate<R: Rng>(rng: &mut R) -> Sentence {
         let genotype_size = Sentence::ideal().genotype.len();
         let genotype: String = (0..genotype_size)
             .map(|_| {
