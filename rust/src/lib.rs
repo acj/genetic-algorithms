@@ -4,6 +4,7 @@ mod sentence;
 
 pub use crate::sentence::Sentence;
 
+use rand::rngs::StdRng;
 use rand::Rng;
 use rayon::prelude::*;
 use std::fmt;
@@ -13,28 +14,31 @@ pub const ALLOWED_FITNESS_ERROR: f64 = 0.001;
 pub trait Individual: Clone + Sync + Send + fmt::Display + Ord {
     fn evaluate(&mut self);
 
-    fn mutate(&self) -> Self;
+    fn mutate(&self, rng: &mut StdRng) -> Self;
 
-    fn crossover(&self, other: Self) -> Self;
+    fn crossover(&self, other: Self, rng: &mut StdRng) -> Self;
 
-    fn generate() -> Self;
+    fn generate(rng: &mut StdRng) -> Self;
 
     fn fitness(&self) -> Option<f64>;
 }
 
 pub struct GeneticAlgorithm<T> {
     population: Vec<T>,
+    rng: StdRng,
 }
 
 impl<T: Individual> GeneticAlgorithm<T> {
-    pub fn new(population_size: usize) -> GeneticAlgorithm<T> {
+    pub fn new(population_size: usize, rng: StdRng) -> GeneticAlgorithm<T> {
+        let mut rng = rng;
         GeneticAlgorithm {
-            population: Self::seed(population_size),
+            population: Self::seed(population_size, &mut rng),
+            rng: rng,
         }
     }
 
-    pub fn seed(population_size: usize) -> Vec<T> {
-        (0..population_size).map(|_| T::generate()).collect()
+    pub fn seed(population_size: usize, rng: &mut StdRng) -> Vec<T> {
+        (0..population_size).map(|_| T::generate(rng)).collect()
     }
 
     pub fn evaluate(&mut self) {
@@ -56,15 +60,20 @@ impl<T: Individual> GeneticAlgorithm<T> {
         let crossover_individuals_needed =
             self.population.len() - new_population.len() - random_individuals_needed;
         for i in &new_population {
-            i.mutate();
+            i.mutate(&mut self.rng);
         }
         for _ in 0..random_individuals_needed {
-            new_population.push(GeneticAlgorithm::random_individual(&self.population));
+            new_population.push(GeneticAlgorithm::random_individual(
+                &self.population,
+                &mut self.rng,
+            ));
         }
         for _ in 0..crossover_individuals_needed {
-            let first_individual = GeneticAlgorithm::random_individual(&self.population);
-            let second_individual = GeneticAlgorithm::random_individual(&self.population);
-            let crossed_individual = first_individual.crossover(second_individual);
+            let first_individual =
+                GeneticAlgorithm::random_individual(&self.population, &mut self.rng);
+            let second_individual =
+                GeneticAlgorithm::random_individual(&self.population, &mut self.rng);
+            let crossed_individual = first_individual.crossover(second_individual, &mut self.rng);
             new_population.push(crossed_individual);
         }
         self.population = new_population;
@@ -74,8 +83,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
         self.population.iter().max().unwrap().clone()
     }
 
-    pub fn random_individual(population: &[T]) -> T {
-        let mut rng = rand::thread_rng();
+    pub fn random_individual(population: &[T], rng: &mut rand::rngs::StdRng) -> T {
         let idx = rng.gen_range(0, population.len());
         population[idx].clone()
     }
@@ -85,6 +93,7 @@ impl<T: Individual> GeneticAlgorithm<T> {
 mod tests {
     use super::*;
     use crate::sentence::Sentence;
+    use rand::{rngs::StdRng, SeedableRng};
 
     #[test]
     fn select() {
@@ -94,7 +103,8 @@ mod tests {
             Sentence::new(optimal_genotype.to_owned()),
             Sentence::new(terrible_genotype.to_owned()),
         ];
-        let mut ga = GeneticAlgorithm { population };
+        let rng = StdRng::seed_from_u64(1234);
+        let mut ga = GeneticAlgorithm { population, rng };
         ga.evaluate();
 
         let selected = GeneticAlgorithm::select(&ga.population, 1);

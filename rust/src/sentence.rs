@@ -1,6 +1,7 @@
 use crate::Individual;
 
 use rand::distributions::{Distribution, Uniform};
+use rand::rngs::StdRng;
 use rand::Rng;
 use std::cmp::Ordering;
 use std::fmt;
@@ -54,18 +55,16 @@ impl Individual for Sentence {
         }
     }
 
-    fn mutate(&self) -> Sentence {
+    fn mutate(&self, rng: &mut StdRng) -> Sentence {
         let per_site_mut_rate = 1.0 / Sentence::ideal().genotype.len() as f64;
-        // TODO: Use random seed
-        let mut rng = rand::thread_rng();
         let mut genotype = vec![0; self.genotype.len()];
         let genotype_bytes = self.genotype.as_bytes();
         let charset_between = Uniform::from(0..CHARSET.len());
         let probability_between = Uniform::from(0.0..1.0);
 
         for i in 0..self.genotype.len() {
-            genotype[i] = if probability_between.sample(&mut rng) <= per_site_mut_rate {
-                CHARSET[charset_between.sample(&mut rng)]
+            genotype[i] = if probability_between.sample(rng) <= per_site_mut_rate {
+                CHARSET[charset_between.sample(rng)]
             } else {
                 genotype_bytes[i]
             };
@@ -74,17 +73,14 @@ impl Individual for Sentence {
         Sentence::new(String::from_utf8(genotype).unwrap())
     }
 
-    fn crossover(&self, other: Sentence) -> Sentence {
-        let mut rng = rand::thread_rng();
+    fn crossover(&self, other: Sentence, rng: &mut StdRng) -> Sentence {
         let pivot = rng.gen_range(0, self.genotype.len());
 
         self.crossover_with_pivot(other, pivot)
     }
 
-    fn generate() -> Sentence {
+    fn generate(rng: &mut StdRng) -> Sentence {
         let genotype_size = Sentence::ideal().genotype.len();
-        let mut rng = rand::thread_rng();
-
         let genotype: String = (0..genotype_size)
             .map(|_| {
                 let idx = rng.gen_range(0, CHARSET.len());
