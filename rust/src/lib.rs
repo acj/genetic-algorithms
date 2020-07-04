@@ -13,16 +13,16 @@ pub const ALLOWED_FITNESS_ERROR: f64 = 0.001;
 pub trait Individual: Clone + Sync + Send + fmt::Display + Ord {
     fn evaluate(&mut self);
 
-    fn mutate<R: Rng>(&self, rng: &mut R) -> Self;
+    fn mutate(&self, rng: &mut impl Rng) -> Self;
 
-    fn crossover<R: Rng>(&self, other: Self, rng: &mut R) -> Self;
+    fn crossover(&self, other: Self, rng: &mut impl Rng) -> Self;
 
-    fn generate<R: Rng>(rng: &mut R) -> Self;
+    fn generate(rng: &mut impl Rng) -> Self;
 
     fn fitness(&self) -> Option<f64>;
 }
 
-pub struct GeneticAlgorithm<R: Rng, T> {
+pub struct GeneticAlgorithm<R, T> {
     population: Vec<T>,
     rng: R,
 }
@@ -36,7 +36,7 @@ impl<R: Rng, T: Individual> GeneticAlgorithm<R, T> {
         }
     }
 
-    pub fn seed(population_size: usize, rng: &mut R) -> Vec<T> {
+    pub fn seed(population_size: usize, rng: &mut impl Rng) -> Vec<T> {
         (0..population_size).map(|_| T::generate(rng)).collect()
     }
 
@@ -61,16 +61,13 @@ impl<R: Rng, T: Individual> GeneticAlgorithm<R, T> {
             i.mutate(&mut self.rng);
         }
         for _ in 0..random_individuals_needed {
-            new_population.push(GeneticAlgorithm::random_individual(
-                &self.population,
-                &mut self.rng,
-            ));
+            new_population.push(self.random_individual());
         }
         for _ in 0..crossover_individuals_needed {
             let first_individual =
-                GeneticAlgorithm::random_individual(&self.population, &mut self.rng);
+                self.random_individual();
             let second_individual =
-                GeneticAlgorithm::random_individual(&self.population, &mut self.rng);
+                self.random_individual();
             let crossed_individual = first_individual.crossover(second_individual, &mut self.rng);
             new_population.push(crossed_individual);
         }
@@ -81,9 +78,9 @@ impl<R: Rng, T: Individual> GeneticAlgorithm<R, T> {
         self.population.iter().max().unwrap().clone()
     }
 
-    pub fn random_individual(population: &[T], rng: &mut R) -> T {
-        let idx = rng.gen_range(0, population.len());
-        population[idx].clone()
+    pub fn random_individual(&mut self) -> T {
+        let idx = self.rng.gen_range(0, self.population.len());
+        self.population[idx].clone()
     }
 }
 
