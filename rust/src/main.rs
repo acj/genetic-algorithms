@@ -5,7 +5,7 @@ use rand::{rngs::StdRng, SeedableRng};
 use std::env;
 use std::time::SystemTime;
 
-fn main() {
+fn main() -> Result<(), &'static str> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() < 3 || args.len() > 4 {
@@ -13,7 +13,7 @@ fn main() {
             "usage: {} <population size> <generations> [seed value]",
             args[0]
         );
-        std::process::exit(1);
+        return Err("invalid args");
     }
 
     let population_size =
@@ -37,10 +37,12 @@ fn main() {
         println!("[{}]: {}", i, best);
         if let Some(fitness) = best.fitness() {
             if (fitness - 1.0).abs() < ga::ALLOWED_FITNESS_ERROR {
-                std::process::exit(0);
+                break;
             }
         }
     }
+
+    Ok(())
 }
 
 fn time_since_epoch() -> u64 {
