@@ -64,10 +64,8 @@ impl<R: Rng, T: Individual> GeneticAlgorithm<R, T> {
             new_population.push(self.random_individual());
         }
         for _ in 0..crossover_individuals_needed {
-            let first_individual =
-                self.random_individual();
-            let second_individual =
-                self.random_individual();
+            let first_individual = self.random_individual();
+            let second_individual = self.random_individual();
             let crossed_individual = first_individual.crossover(second_individual, &mut self.rng);
             new_population.push(crossed_individual);
         }
